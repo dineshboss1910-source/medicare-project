@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -11,7 +11,7 @@
 .dash-header h1{font-size:26px;font-weight:800;margin-bottom:4px}
 .dash-header p{opacity:.85;font-size:14px}
 .dash-body{max-width:1200px;margin:0 auto;padding:28px 24px}
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:28px}
 .dash-stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
 .dash-stat-icon{width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
 .dash-stat-body .val{font-size:28px;font-weight:800;color:var(--primary);line-height:1}
@@ -50,44 +50,15 @@
       <div class="dash-stat-icon" style="background:#f0fdf4;color:#16a34a">🧑</div>
       <div class="dash-stat-body"><div class="val" id="stat-patients">—</div><div class="lbl">Total Patients</div></div>
     </div>
-    <div class="dash-stat">
-      <div class="dash-stat-icon" style="background:#e0f4f7;color:#088395">📅</div>
-      <div class="dash-stat-body"><div class="val" id="stat-appts">—</div><div class="lbl">Total Appointments</div></div>
-    </div>
-    <div class="dash-stat">
-      <div class="dash-stat-icon" style="background:#fef3c7;color:#d97706">⏳</div>
-      <div class="dash-stat-body"><div class="val" id="stat-pending">—</div><div class="lbl">Pending</div></div>
-    </div>
-    <div class="dash-stat">
-      <div class="dash-stat-icon" style="background:#dcfce7;color:#16a34a">🏁</div>
-      <div class="dash-stat-body"><div class="val" id="stat-completed">—</div><div class="lbl">Completed</div></div>
-    </div>
-    <div class="dash-stat">
-      <div class="dash-stat-icon" style="background:#f3e8ff;color:#9333ea">📋</div>
-      <div class="dash-stat-body"><div class="val" id="stat-records">—</div><div class="lbl">Medical Records</div></div>
-    </div>
+
   </div>
 
-  <!-- Quick Actions + Recent Appointments -->
-  <div class="two-col">
-    <div class="section-card">
-      <div class="section-card-title">Quick Actions</div>
-      <a href="/doctors" class="quick-btn">👨‍⚕️ Manage Doctors</a>
-      <a href="/patients" class="quick-btn">🧑 View Patients</a>
-      <a href="/appointments" class="quick-btn">📅 View All Appointments</a>
-      <a href="/medical-records" class="quick-btn">📋 Medical Records</a>
-      <a href="/change-password" class="quick-btn">🔐 Change Password</a>
-    </div>
-    <div class="section-card">
-      <div class="section-card-title">Recent Appointments</div>
-      <div id="recentAppts"><p style="color:var(--muted);font-size:13px">Loading...</p></div>
-    </div>
-  </div>
-
-  <!-- Recent Records -->
+  <!-- Quick Actions -->
   <div class="section-card" style="margin-bottom:24px">
-    <div class="section-card-title">Recent Medical Records</div>
-    <div id="recentRecs"><p style="color:var(--muted);font-size:13px">Loading...</p></div>
+    <div class="section-card-title">Quick Actions</div>
+    <a href="/doctors" class="quick-btn">👨‍⚕️ Manage Doctors</a>
+    <a href="/patients" class="quick-btn">🧑 View Patients</a>
+    <a href="/change-password" class="quick-btn">🔐 Change Password</a>
   </div>
 
 </div>
@@ -100,62 +71,12 @@ if (MediCare.requireLogin()) {
 }
 
 async function loadDashboard(){
-  const [statsRes, apptsRes, recsRes] = await Promise.all([
-    MediCare.api('/admin/stats'),
-    MediCare.api('/appointment/all'),
-    MediCare.api('/medical-record')
-  ]);
-
-  if (statsRes) {
-    const s = await statsRes.json();
+  const res = await MediCare.api('/admin/stats');
+  if (res) {
+    const s = await res.json();
     document.getElementById('stat-doctors').textContent   = s.totalDoctors ?? '—';
     document.getElementById('stat-patients').textContent  = s.totalPatients ?? '—';
-    document.getElementById('stat-appts').textContent     = s.totalAppointments ?? '—';
-    document.getElementById('stat-pending').textContent   = s.pendingAppointments ?? '—';
-    document.getElementById('stat-completed').textContent = s.completedAppointments ?? '—';
-    document.getElementById('stat-records').textContent   = s.totalRecords ?? '—';
   }
-
-  if (apptsRes) {
-    const list = await apptsRes.json();
-    const recent = list.slice(-5).reverse();
-    const box = document.getElementById('recentAppts');
-    if (!recent.length) { box.innerHTML='<p style="color:var(--muted);font-size:13px">No appointments yet</p>'; }
-    else {
-      box.innerHTML = recent.map(a => `
-        <div class="recent-item">
-          <div>
-            <div class="info"><strong>${a.patientName||'-'}</strong> → Dr. ${a.doctorName||'-'}</div>
-            <div class="meta">${a.appointmentDate||'-'} ${a.timeSlot?'· '+formatSlot(a.timeSlot):''}</div>
-          </div>
-          <span class="badge ${badgeFor(a.status)}">${a.status}</span>
-        </div>`).join('');
-    }
-  }
-
-  if (recsRes) {
-    const list = await recsRes.json();
-    const recent = list.slice(0,5);
-    const box = document.getElementById('recentRecs');
-    if (!recent.length) { box.innerHTML='<p style="color:var(--muted);font-size:13px">No medical records yet</p>'; }
-    else {
-      box.innerHTML = '<table class="table"><thead><tr><th>Patient</th><th>Doctor</th><th>Diagnosis</th><th>Date</th></tr></thead><tbody>'
-        + recent.map(r => `<tr><td>${r.patientName||'-'}</td><td>Dr. ${r.doctorName||'-'}</td><td>${r.diagnosis||'-'}</td><td>${r.recordDate||'-'}</td></tr>`).join('')
-        + '</tbody></table>';
-    }
-  }
-}
-
-function formatSlot(slot){
-  const [h,m] = slot.split(':');
-  const hr = parseInt(h);
-  return (hr%12||12)+':'+(m||'00')+' '+(hr<12?'AM':'PM');
-}
-function badgeFor(s){
-  if(s==='CONFIRMED') return 'badge-success';
-  if(s==='CANCELLED') return 'badge-danger';
-  if(s==='COMPLETED') return 'badge-info';
-  return 'badge-warn';
 }
 </script>
 </body></html>

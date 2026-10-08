@@ -46,14 +46,11 @@ const MediCare = (function(){
       links = `
         <a href="/dashboard"     class="${active==='dashboard'?'active':''}">Dashboard</a>
         <a href="/doctors"       class="${active==='doctors'?'active':''}">Doctors</a>
-        <a href="/patients"      class="${active==='patients'?'active':''}">Patients</a>
-        <a href="/appointments"  class="${active==='appointments'?'active':''}">Appointments</a>
-        <a href="/medical-records" class="${active==='records'?'active':''}">Records</a>`;
+        <a href="/patients"      class="${active==='patients'?'active':''}">Patients</a>`;
     } else if (r === 'DOCTOR') {
       links = `
         <a href="/doctor-dashboard" class="${active==='dashboard'?'active':''}">Dashboard</a>
         <a href="/appointments"     class="${active==='appointments'?'active':''}">Appointments</a>
-        <a href="/medical-records"  class="${active==='records'?'active':''}">Records</a>
         <a href="/change-password"  class="${active==='change-password'?'active':''}">Password</a>`;
     } else {
       links = `
