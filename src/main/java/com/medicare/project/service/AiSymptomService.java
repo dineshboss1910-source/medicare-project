@@ -19,10 +19,11 @@ import java.util.*;
 @Service
 public class AiSymptomService {
 
-    // No API key required for Pollinations AI!
-    private static final String API_URL = "https://text.pollinations.ai/openai";
+    @org.springframework.beans.factory.annotation.Value("${app.groq.api.key:}")
+    private String apiKey;
 
-    private static final String MODEL_NAME = "openai";
+    private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    private static final String MODEL_NAME = "llama3-8b-8192";
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -138,14 +139,16 @@ public class AiSymptomService {
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", MODEL_NAME);
-        requestBody.put("jsonMode", true);
+        requestBody.put("response_format", Map.of("type", "json_object"));
         requestBody.put("messages", List.of(
                 Map.of("role", "user", "content", prompt)
         ));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        // No Auth headers needed!
+        if (apiKey != null && !apiKey.isBlank()) {
+            headers.setBearerAuth(apiKey);
+        }
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
